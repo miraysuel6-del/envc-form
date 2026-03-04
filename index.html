@@ -1,183 +1,217 @@
-import { useState } from "react";
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENVC — Pitch Başvurusu</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #030712; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    input, textarea, select { color-scheme: dark; }
+    ::placeholder { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
 
-const inputStyle = {
-  width:"100%", background:"#0f172a", border:"1px solid #1e293b",
-  borderRadius:"8px", padding:"10px 12px", fontSize:"14px", color:"white", outline:"none"
-};
-const labelStyle = { fontSize:"14px", color:"#cbd5e1", display:"block", marginBottom:"6px" };
-const reqStar = <span style={{color:"#f87171"}}>*</span>;
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-rFOFilnkvT_BFSz4PfM30_ZEe1gJ5O0P_e-LvV7vL9OaVPg5LcJ7N-NJX8ZQUHq1OQ/exec";
 
-function CheckboxGroup({ options, value=[], onChange }) {
-  const toggle = (o) => onChange(value.includes(o) ? value.filter(x=>x!==o) : [...value, o]);
-  return (
-    <div style={{display:"flex", flexWrap:"wrap", gap:"8px"}}>
-      {options.map(o => {
-        const sel = value.includes(o);
-        return (
-          <button key={o} type="button" onClick={() => toggle(o)} style={{
-            padding:"6px 14px", borderRadius:"999px", fontSize:"12px", fontWeight:"500",
-            border: sel ? "1px solid #6366f1" : "1px solid #1e293b",
-            background: sel ? "#4f46e5" : "#0f172a", color: sel ? "white" : "#94a3b8", cursor:"pointer"
-          }}>{o}</button>
-        );
-      })}
-    </div>
-  );
-}
+    const inputStyle = {
+      width:"100%", background:"#0f172a", border:"1px solid #1e293b",
+      borderRadius:"8px", padding:"10px 12px", fontSize:"14px", color:"white", outline:"none"
+    };
+    const labelStyle = { fontSize:"14px", color:"#cbd5e1", display:"block", marginBottom:"6px" };
+    const reqStar = React.createElement("span", {style:{color:"#f87171"}}, "*");
 
-export default function App() {
-  const [step, setStep] = useState(0);
-  const [a, setA] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
+    function CheckboxGroup({ options, value, onChange }) {
+      value = value || [];
+      const toggle = (o) => onChange(value.includes(o) ? value.filter(x=>x!==o) : [...value, o]);
+      return React.createElement("div", {style:{display:"flex", flexWrap:"wrap", gap:"8px"}},
+        options.map(o => {
+          const sel = value.includes(o);
+          return React.createElement("button", {
+            key: o, type:"button", onClick: () => toggle(o),
+            style:{
+              padding:"6px 14px", borderRadius:"999px", fontSize:"12px", fontWeight:"500",
+              border: sel ? "1px solid #6366f1" : "1px solid #1e293b",
+              background: sel ? "#4f46e5" : "#0f172a", color: sel ? "white" : "#94a3b8", cursor:"pointer"
+            }
+          }, o);
+        })
+      );
+    }
 
-  const set = (k, v) => { setA(p => ({...p, [k]: v})); setErrors(e => ({...e, [k]: false})); };
+    function App() {
+      const [step, setStep] = useState(0);
+      const [a, setA] = useState({});
+      const [submitted, setSubmitted] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const [errors, setErrors] = useState({});
 
-  const validateStep1 = () => {
-    const e = {};
-    if (!a.name?.trim()) e.name = true;
-    if (!a.dept?.trim()) e.dept = true;
-    if (!a.phone?.trim()) e.phone = true;
-    if (!a.email?.trim()) e.email = true;
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+      const set = (k, v) => { setA(p => ({...p, [k]: v})); setErrors(e => ({...e, [k]: false})); };
 
-  const next = () => {
-    if (step === 0 && !validateStep1()) return;
-    setStep(s => s + 1);
-  };
+      const validateStep1 = () => {
+        const e = {};
+        if (!a.name?.trim()) e.name = true;
+        if (!a.dept?.trim()) e.dept = true;
+        if (!a.phone?.trim()) e.phone = true;
+        if (!a.email?.trim()) e.email = true;
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      };
 
-  const err = (k) => errors[k] ? {border:"1px solid #f87171"} : {};
-  const steps = ["Seni tanıyalım", "Startup & Sektör", "Fikrin & Motivasyon"];
+      const next = () => {
+        if (step === 0 && !validateStep1()) return;
+        setStep(s => s + 1);
+      };
 
-  return (
-    <div style={{minHeight:"100vh", background:"#030712", display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 16px"}}>
-      <div style={{width:"100%", maxWidth:"520px"}}>
-        {!submitted ? (
-          <>
-            <div style={{marginBottom:"28px"}}>
-              <p style={{fontSize:"11px", color:"#818cf8", fontFamily:"monospace", marginBottom:"6px", letterSpacing:"0.05em"}}>ENVC — Pitch Başvurusu</p>
-              {step === 0 && (
-                <div style={{background:"#0f172a", border:"1px solid #1e293b", borderRadius:"10px", padding:"14px", marginBottom:"16px"}}>
-                  <p style={{color:"#e2e8f0", fontSize:"13px", lineHeight:"1.6", marginBottom:"8px"}}>
-                    <span style={{color:"#a5b4fc", fontWeight:"600"}}>ENVC - Genel</span> grubu herkese açık olup, <span style={{color:"#a5b4fc", fontWeight:"600"}}>ENVC - Startup Topluluğu</span> başvuruya tabidir.
-                  </p>
-                  <p style={{color:"#94a3b8", fontSize:"12px", lineHeight:"1.6"}}>
-                    Önümüzdeki dönemde yapılacak olan kapalı VC oturumlarına katılım ve sunum önceliği bu grup üzerinden sağlanacaktır.
-                  </p>
-                </div>
-              )}
-              <h1 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"12px"}}>{steps[step]}</h1>
-              <div style={{display:"flex", gap:"4px"}}>
-                {steps.map((_, i) => (
-                  <div key={i} style={{height:"3px", flex:1, borderRadius:"999px", background: i <= step ? "#6366f1" : "#1e293b", transition:"all 0.3s"}} />
-                ))}
-              </div>
-            </div>
+      const submit = async () => {
+        setLoading(true);
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST", mode: "no-cors",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(a)
+          });
+        } catch(e) {}
+        setLoading(false);
+        setSubmitted(true);
+      };
 
-            {step === 0 && (
-              <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
-                {[
-                  {k:"name", label:"İsim Soyisim", placeholder:"Miray İpek", req:true},
-                  {k:"dept", label:"Bölüm & Sınıf", placeholder:"Felsefe & Ekonomi, 3. sınıf", req:true},
-                  {k:"phone", label:"Telefon Numarası", placeholder:"+90 5xx xxx xx xx", req:true},
-                  {k:"email", label:"E-posta", placeholder:"miray@example.com", req:true},
-                  {k:"linkedin", label:"LinkedIn", placeholder:"linkedin.com/in/...", req:false},
-                ].map(f => (
-                  <div key={f.k}>
-                    <label style={labelStyle}>{f.label} {f.req && reqStar}</label>
-                    <input value={a[f.k]||""} onChange={e=>set(f.k,e.target.value)} placeholder={f.placeholder} style={{...inputStyle,...err(f.k)}} />
-                    {errors[f.k] && <p style={{color:"#f87171",fontSize:"12px",marginTop:"4px"}}>Bu alan zorunludur.</p>}
+      const err = (k) => errors[k] ? {border:"1px solid #f87171"} : {};
+      const steps = ["Seni tanıyalım", "Startup & Sektör", "Fikrin & Motivasyon"];
+
+      const fields1 = [
+        {k:"name", label:"İsim Soyisim", placeholder:"Miray İpek", req:true},
+        {k:"dept", label:"Bölüm & Sınıf", placeholder:"Felsefe & Ekonomi, 3. sınıf", req:true},
+        {k:"phone", label:"Telefon Numarası", placeholder:"+90 5xx xxx xx xx", req:true},
+        {k:"email", label:"E-posta", placeholder:"miray@example.com", req:true},
+        {k:"linkedin", label:"LinkedIn", placeholder:"linkedin.com/in/...", req:false},
+      ];
+
+      return (
+        <div style={{minHeight:"100vh", background:"#030712", display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 16px"}}>
+          <div style={{width:"100%", maxWidth:"520px"}}>
+            {!submitted ? (
+              <div>
+                <div style={{marginBottom:"28px"}}>
+                  <p style={{fontSize:"11px", color:"#818cf8", fontFamily:"monospace", marginBottom:"6px", letterSpacing:"0.05em"}}>ENVC — Pitch Başvurusu</p>
+                  {step === 0 && (
+                    <div style={{background:"#0f172a", border:"1px solid #1e293b", borderRadius:"10px", padding:"14px", marginBottom:"16px"}}>
+                      <p style={{color:"#e2e8f0", fontSize:"13px", lineHeight:"1.6", marginBottom:"8px"}}>
+                        <b style={{color:"#a5b4fc"}}>ENVC - Genel</b> grubu herkese açık olup, <b style={{color:"#a5b4fc"}}>ENVC - Startup Topluluğu</b> başvuruya tabidir.
+                      </p>
+                      <p style={{color:"#94a3b8", fontSize:"12px", lineHeight:"1.6"}}>
+                        Önümüzdeki dönemde yapılacak olan kapalı VC oturumlarına katılım ve sunum önceliği bu grup üzerinden sağlanacaktır.
+                      </p>
+                    </div>
+                  )}
+                  <h1 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"12px"}}>{steps[step]}</h1>
+                  <div style={{display:"flex", gap:"4px"}}>
+                    {steps.map((_, i) => (
+                      <div key={i} style={{height:"3px", flex:1, borderRadius:"999px", background: i <= step ? "#6366f1" : "#1e293b"}} />
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {step === 0 && (
+                  <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
+                    {fields1.map(f => (
+                      <div key={f.k}>
+                        <label style={labelStyle}>{f.label} {f.req && reqStar}</label>
+                        <input value={a[f.k]||""} onChange={e=>set(f.k,e.target.value)} placeholder={f.placeholder} style={{...inputStyle,...err(f.k)}} />
+                        {errors[f.k] && <p style={{color:"#f87171",fontSize:"12px",marginTop:"4px"}}>Bu alan zorunludur.</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
+                    <div>
+                      <label style={labelStyle}>Girişimcilik yolculuğunda şu an neredesin?</label>
+                      <select value={a.stage||""} onChange={e=>set("stage",e.target.value)} style={inputStyle}>
+                        <option value="">Seç...</option>
+                        <option>Bir fikrim var, henüz kimseye anlatmadım</option>
+                        <option>Aktif olarak üzerinde çalışıyorum</option>
+                        <option>Bir ekibim var, ürün geliştirme aşamasındayız</option>
+                        <option>Yatırım aldım / almak üzereyim</option>
+                        <option>Girişimci olmaktan çok yatırım tarafını anlamak istiyorum</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>İlgilendiğin sektör(ler)</label>
+                      <CheckboxGroup
+                        options={["Fintech","SaaS / B2B","Deep Tech","Sağlık","Eğitim","Tüketici / B2C","Gaming","AI","Non-gaming Apps","İklim / Sürdürülebilirlik","Diğer"]}
+                        value={a.sector||[]} onChange={v=>set("sector",v)} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Ne arıyorsun?</label>
+                      <CheckboxGroup
+                        options={["Co-founder","Teknik ekip arkadaşı","Mentor","Yatırımcıyla tanışma fırsatı","Feedback / pitch pratiği","Networking","Bilgilendirici/eğitici içerikler","Sadece bu topluluğun içinde olmak"]}
+                        value={a.looking||[]} onChange={v=>set("looking",v)} />
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
+                    <div>
+                      <label style={labelStyle}>Fikrini kısaca anlat</label>
+                      <textarea value={a.idea||""} onChange={e=>set("idea",e.target.value)}
+                        placeholder="Çözdüğün problem ve nasıl çözüyorsun..." rows={3} style={{...inputStyle, resize:"none"}} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Pitch deck linki (opsiyonel)</label>
+                      <input value={a.deck||""} onChange={e=>set("deck",e.target.value)} placeholder="Google Drive, Notion, Docsend..." style={inputStyle} />
+                      <p style={{color:"#475569", fontSize:"12px", marginTop:"4px"}}>Drive, Notion, Docsend vb. link paylaşabilirsin.</p>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Katılım motivasyonun (opsiyonel)</label>
+                      <textarea value={a.motivation||""} onChange={e=>set("motivation",e.target.value)}
+                        placeholder="Bu topluluğa neden katılmak istiyorsun?" rows={4} style={{...inputStyle, resize:"none"}} />
+                      <p style={{color:"#475569", fontSize:"12px", marginTop:"4px"}}>Pitch deckin yoksa bu alan değerlendirmede belirleyici olacak.</p>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Eklemek istediğin bir şey?</label>
+                      <textarea value={a.note||""} onChange={e=>set("note",e.target.value)}
+                        placeholder="Serbest alan..." rows={2} style={{...inputStyle, resize:"none"}} />
+                    </div>
+                  </div>
+                )}
+
+                <div style={{display:"flex", gap:"10px", marginTop:"28px"}}>
+                  {step > 0 && (
+                    <button onClick={()=>setStep(s=>s-1)} style={{flex:1, background:"#0f172a", border:"1px solid #1e293b", color:"#94a3b8", padding:"10px", borderRadius:"8px", fontSize:"14px", cursor:"pointer"}}>Geri</button>
+                  )}
+                  {step < 2 ? (
+                    <button onClick={next} style={{flex:1, background:"#4f46e5", border:"none", color:"white", padding:"10px", borderRadius:"8px", fontSize:"14px", fontWeight:"500", cursor:"pointer"}}>Devam</button>
+                  ) : (
+                    <button onClick={submit} disabled={loading} style={{flex:1, background: loading ? "#3730a3" : "#4f46e5", border:"none", color:"white", padding:"10px", borderRadius:"8px", fontSize:"14px", fontWeight:"500", cursor:"pointer"}}>
+                      {loading ? "Gönderiliyor..." : "Gönder"}
+                    </button>
+                  )}
+                </div>
+                <p style={{textAlign:"center", color:"#334155", fontSize:"12px", marginTop:"10px"}}>{step+1} / 3</p>
+              </div>
+            ) : (
+              <div style={{textAlign:"center", padding:"60px 0"}}>
+                <div style={{fontSize:"40px", marginBottom:"16px"}}>🚀</div>
+                <h2 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"8px"}}>Başvurun alındı!</h2>
+                <p style={{color:"#64748b", fontSize:"14px"}}>Yakında seninle iletişime geçeceğiz.</p>
               </div>
             )}
-
-            {step === 1 && (
-              <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
-                <div>
-                  <label style={labelStyle}>Girişimcilik yolculuğunda şu an neredesin?</label>
-                  <select value={a.stage||""} onChange={e=>set("stage",e.target.value)} style={inputStyle}>
-                    <option value="">Seç...</option>
-                    <option>Bir fikrim var, henüz kimseye anlatmadım</option>
-                    <option>Aktif olarak üzerinde çalışıyorum</option>
-                    <option>Bir ekibim var, ürün geliştirme aşamasındayız</option>
-                    <option>Yatırım aldım / almak üzereyim</option>
-                    <option>Girişimci olmaktan çok yatırım tarafını anlamak istiyorum</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>İlgilendiğin sektör(ler)</label>
-                  <CheckboxGroup
-                    options={["Fintech","SaaS / B2B","Deep Tech","Sağlık","Eğitim","Tüketici / B2C","Gaming","AI","Non-gaming Apps","İklim / Sürdürülebilirlik","Diğer"]}
-                    value={a.sector||[]} onChange={v=>set("sector",v)} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Ne arıyorsun?</label>
-                  <CheckboxGroup
-                    options={["Co-founder","Teknik ekip arkadaşı","Mentor","Yatırımcıyla tanışma fırsatı","Feedback / pitch pratiği","Networking","Bilgilendirici/eğitici içerikler","Sadece bu topluluğun içinde olmak"]}
-                    value={a.looking||[]} onChange={v=>set("looking",v)} />
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
-                <div>
-                  <label style={labelStyle}>Fikrini kısaca anlat</label>
-                  <textarea value={a.idea||""} onChange={e=>set("idea",e.target.value)}
-                    placeholder="Çözdüğün problem ve nasıl çözüyorsun..." rows={3} style={{...inputStyle, resize:"none"}} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Pitch deck linki (opsiyonel)</label>
-                  <input value={a.deck||""} onChange={e=>set("deck",e.target.value)}
-                    placeholder="Google Drive, Notion, Docsend..." style={inputStyle} />
-                  <p style={{color:"#475569", fontSize:"12px", marginTop:"4px"}}>Drive, Notion, Docsend vb. link paylaşabilirsin.</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Katılım motivasyonun (opsiyonel)</label>
-                  <textarea value={a.motivation||""} onChange={e=>set("motivation",e.target.value)}
-                    placeholder="Bu topluluğa neden katılmak istiyorsun?" rows={4} style={{...inputStyle, resize:"none"}} />
-                  <p style={{color:"#475569", fontSize:"12px", marginTop:"4px"}}>Pitch deckin yoksa bu alan değerlendirmede belirleyici olacak.</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Eklemek istediğin bir şey?</label>
-                  <textarea value={a.note||""} onChange={e=>set("note",e.target.value)}
-                    placeholder="Serbest alan..." rows={2} style={{...inputStyle, resize:"none"}} />
-                </div>
-              </div>
-            )}
-
-            <div style={{display:"flex", gap:"10px", marginTop:"28px"}}>
-              {step > 0 && (
-                <button onClick={()=>setStep(s=>s-1)} style={{
-                  flex:1, background:"#0f172a", border:"1px solid #1e293b", color:"#94a3b8",
-                  padding:"10px", borderRadius:"8px", fontSize:"14px", cursor:"pointer"
-                }}>Geri</button>
-              )}
-              {step < 2 ? (
-                <button onClick={next} style={{
-                  flex:1, background:"#4f46e5", border:"none", color:"white",
-                  padding:"10px", borderRadius:"8px", fontSize:"14px", fontWeight:"500", cursor:"pointer"
-                }}>Devam</button>
-              ) : (
-                <button onClick={() => setSubmitted(true)} style={{
-                  flex:1, background:"#4f46e5", border:"none", color:"white",
-                  padding:"10px", borderRadius:"8px", fontSize:"14px", fontWeight:"500", cursor:"pointer"
-                }}>Gönder</button>
-              )}
-            </div>
-            <p style={{textAlign:"center", color:"#334155", fontSize:"12px", marginTop:"10px"}}>{step+1} / 3</p>
-          </>
-        ) : (
-          <div style={{textAlign:"center", padding:"60px 0"}}>
-            <div style={{fontSize:"40px", marginBottom:"16px"}}>🚀</div>
-            <h2 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"8px"}}>Başvurun alındı!</h2>
-            <p style={{color:"#64748b", fontSize:"14px"}}>Yakında seninle iletişime geçeceğiz.</p>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
