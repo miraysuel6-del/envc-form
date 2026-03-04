@@ -19,7 +19,7 @@
   <script type="text/babel">
     const { useState } = React;
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz9wBaFtqw6S8BmKKEWLS_aFZKzthfThfxM3fZE0v-wbozyN5mIyhudoAOGYdA_3nveqA/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCpstJqcMPVC5KK_f49otznNd9Pdb4GsmHyE6BKuW0bxebj-8C0ACXLTgAFCvdR5_aCg/exec";
 
     const inputStyle = {
       width:"100%", background:"#0f172a", border:"1px solid #1e293b",
@@ -73,10 +73,13 @@
       const submit = async () => {
         setLoading(true);
         try {
+          const form = new FormData();
+          Object.entries(a).forEach(([k, v]) => {
+            form.append(k, Array.isArray(v) ? v.join(", ") : v || "");
+          });
           await fetch(APPS_SCRIPT_URL, {
             method: "POST", mode: "no-cors",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(a)
+            body: form
           });
         } catch(e) {}
         setLoading(false);
