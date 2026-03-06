@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENVC — VC101 Kayıt</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #030712; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    input, textarea, select { color-scheme: dark; }
+    ::placeholder { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyyshgU-KqxR_sFkr4ypzE1WgIuHttt6KvHVrB0vSsEgJENTDHBM97g6Yuy0SZ79XN/exec";
+
+    const inputStyle = {
+      width:"100%", background:"#0f172a", border:"1px solid #1e293b",
+      borderRadius:"8px", padding:"10px 12px", fontSize:"14px", color:"white", outline:"none"
+    };
+    const labelStyle = { fontSize:"14px", color:"#cbd5e1", display:"block", marginBottom:"6px" };
+    const reqStar = React.createElement("span", {style:{color:"#f87171"}}, "*");
+
+    function CheckboxGroup({ options, value, onChange }) {
+      value = value || [];
+      const toggle = (o) => onChange(value.includes(o) ? value.filter(x=>x!==o) : [...value, o]);
+      return React.createElement("div", {style:{display:"flex", flexWrap:"wrap", gap:"8px"}},
+        options.map(o => {
+          const sel = value.includes(o);
+          return React.createElement("button", {
+            key: o, type:"button", onClick: () => toggle(o),
+            style:{
+              padding:"6px 14px", borderRadius:"999px", fontSize:"12px", fontWeight:"500",
+              border: sel ? "1px solid #6366f1" : "1px solid #1e293b",
+              background: sel ? "#4f46e5" : "#0f172a", color: sel ? "white" : "#94a3b8", cursor:"pointer"
+            }
+          }, o);
+        })
+      );
+    }
+
+    function App() {
+      const [a, setA] = useState({});
+      const [submitted, setSubmitted] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const [errors, setErrors] = useState({});
+
+      const set = (k, v) => { setA(p => ({...p, [k]: v})); setErrors(e => ({...e, [k]: false})); };
+
+      const validate = () => {
+        const e = {};
+        if (!a.name?.trim()) e.name = true;
+        if (!a.dept?.trim()) e.dept = true;
+        if (!a.email?.trim()) e.email = true;
+        if (!a.phone?.trim()) e.phone = true;
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      };
+
+      const submit = async () => {
+        if (!validate()) return;
+        setLoading(true);
+        try {
+          const form = new FormData();
+          Object.entries(a).forEach(([k, v]) => {
+            form.append(k, Array.isArray(v) ? v.join(", ") : v || "");
+          });
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST", mode: "no-cors", body: form
+          });
+        } catch(e) {}
+        setLoading(false);
+        setSubmitted(true);
+      };
+
+      const err = (k) => errors[k] ? {border:"1px solid #f87171"} : {};
+
+      return React.createElement("div", {style:{minHeight:"100vh", background:"#030712", display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 16px"}},
+        React.createElement("div", {style:{width:"100%", maxWidth:"520px"}},
+          !submitted ?
+            React.createElement("div", null,
+              // Header
+              React.createElement("div", {style:{marginBottom:"28px"}},
+                React.createElement("p", {style:{fontSize:"11px", color:"#818cf8", fontFamily:"monospace", marginBottom:"6px", letterSpacing:"0.05em"}}, "ENVC — Etkinlik Kaydı"),
+                React.createElement("div", {style:{background:"#0f172a", border:"1px solid #1e293b", borderRadius:"10px", padding:"16px", marginBottom:"20px"}},
+                  React.createElement("div", {style:{display:"flex", alignItems:"center", gap:"10px", marginBottom:"10px"}},
+                    React.createElement("span", {style:{fontSize:"24px"}}, "🎤"),
+                    React.createElement("div", null,
+                      React.createElement("h2", {style:{color:"white", fontSize:"16px", fontWeight:"700", margin:0}}, "VC101"),
+                      React.createElement("p", {style:{color:"#94a3b8", fontSize:"12px", margin:0}}, "Başak Zorlutuna Bükümcü — e2vc")
+                    )
+                  ),
+                  React.createElement("div", {style:{display:"flex", gap:"16px", flexWrap:"wrap"}},
+                    React.createElement("span", {style:{color:"#a5b4fc", fontSize:"12px"}}, "📅 17 Mart 2026"),
+                    React.createElement("span", {style:{color:"#a5b4fc", fontSize:"12px"}}, "🕔 17:00")
+                  ),
+                  React.createElement("p", {style:{color:"#64748b", fontSize:"12px", marginTop:"10px", lineHeight:"1.6"}},
+                    "VC nedir, nasıl çalışır, neler yapar? e2vc'den Başak Zorlutuna Bükümcü ile venture capital dünyasını ilk elden konuşacağız."
+                  )
+                ),
+                React.createElement("h1", {style:{fontSize:"20px", fontWeight:"700", color:"white"}}, "Kayıt Formu")
+              ),
+
+              // Fields
+              React.createElement("div", {style:{display:"flex", flexDirection:"column", gap:"16px"}},
+                ...[
+                  {k:"name", label:"İsim Soyisim", placeholder:"Miray İpek", req:true},
+                  {k:"dept", label:"Bölüm & Sınıf", placeholder:"Felsefe & Ekonomi, 3. sınıf", req:true},
+                  {k:"email", label:"E-posta", placeholder:"miray@example.com", req:true},
+                  {k:"phone", label:"Telefon", placeholder:"+90 5xx xxx xx xx", req:true},
+                ].map(f =>
+                  React.createElement("div", {key:f.k},
+                    React.createElement("label", {style:labelStyle}, f.label, " ", f.req && reqStar),
+                    React.createElement("input", {value:a[f.k]||"", onChange:e=>set(f.k,e.target.value), placeholder:f.placeholder, style:{...inputStyle,...err(f.k)}}),
+                    errors[f.k] && React.createElement("p", {style:{color:"#f87171",fontSize:"12px",marginTop:"4px"}}, "Bu alan zorunludur.")
+                  )
+                ),
+                React.createElement("div", null,
+                  React.createElement("label", {style:labelStyle}, "VC'ye ilgi alanın"),
+                  React.createElement(CheckboxGroup, {
+                    options:["Yatırım süreci","Fon yapısı","Startup değerleme","Founder-investor ilişkisi","Kariyer","Türkiye ekosistemi","Diğer"],
+                    value:a.interest||[], onChange:v=>set("interest",v)
+                  })
+                ),
+                React.createElement("div", null,
+                  React.createElement("label", {style:labelStyle}, "Konuşmacıya sormak istediğin soru (opsiyonel)"),
+                  React.createElement("textarea", {value:a.question||"", onChange:e=>set("question",e.target.value), placeholder:"Aklındaki soruyu yaz, oturumda sorulmak üzere değerlendireceğiz.", rows:3, style:{...inputStyle, resize:"none"}})
+                )
+              ),
+
+              React.createElement("button", {
+                onClick:submit, disabled:loading,
+                style:{width:"100%", marginTop:"24px", background:loading?"#3730a3":"#4f46e5", border:"none", color:"white", padding:"12px", borderRadius:"8px", fontSize:"14px", fontWeight:"500", cursor:"pointer"}
+              }, loading ? "Kaydediliyor..." : "Kaydımı Tamamla")
+            )
+          :
+            React.createElement("div", {style:{textAlign:"center", padding:"60px 0"}},
+              React.createElement("div", {style:{fontSize:"40px", marginBottom:"16px"}}, "🎉"),
+              React.createElement("h2", {style:{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"8px"}}, "Kaydın alındı!"),
+              React.createElement("p", {style:{color:"#64748b", fontSize:"14px"}}, "17 Mart'ta görüşürüz.")
+            )
+        )
+      );
+    }
+
+    ReactDOM.render(React.createElement(App), document.getElementById("root"));
+  </script>
+</body>
+</html>
