@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENVC — Tanışma Buluşması</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #030712; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    input, textarea { color-scheme: dark; }
+    ::placeholder { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-p_BVS4VUq9UwSWRmqCbl2p1psgNIH3GXT-PgJIu_ffNDwhcZzl25AYhlbiGN5RYHvw/exec";
+
+    const inputStyle = {
+      width:"100%", background:"#0f172a", border:"1px solid #1e293b",
+      borderRadius:"8px", padding:"10px 12px", fontSize:"14px", color:"white", outline:"none"
+    };
+    const labelStyle = { fontSize:"14px", color:"#cbd5e1", display:"block", marginBottom:"6px" };
+    const reqStar = React.createElement("span", {style:{color:"#f87171"}}, "*");
+
+    function App() {
+      const [a, setA] = useState({});
+      const [submitted, setSubmitted] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const [errors, setErrors] = useState({});
+
+      const set = (k, v) => { setA(p => ({...p, [k]: v})); setErrors(e => ({...e, [k]: false})); };
+
+      const validate = () => {
+        const e = {};
+        if (!a.name?.trim()) e.name = true;
+        if (!a.dept?.trim()) e.dept = true;
+        if (!a.email?.trim()) e.email = true;
+        if (!a.phone?.trim()) e.phone = true;
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      };
+
+      const submit = async () => {
+        if (!validate()) return;
+        setLoading(true);
+        try {
+          const form = new FormData();
+          Object.entries(a).forEach(([k, v]) => form.append(k, v || ""));
+          await fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", body:form });
+        } catch(e) {}
+        setLoading(false);
+        setSubmitted(true);
+      };
+
+      const err = (k) => errors[k] ? {border:"1px solid #f87171"} : {};
+
+      const fields = [
+        {k:"name", label:"İsim Soyisim", placeholder:"Miray İpek"},
+        {k:"dept", label:"Bölüm & Sınıf", placeholder:"Felsefe & Ekonomi, 3. sınıf"},
+        {k:"email", label:"E-posta", placeholder:"miray@example.com"},
+        {k:"phone", label:"Telefon", placeholder:"+90 5xx xxx xx xx"},
+      ];
+
+      return (
+        <div style={{minHeight:"100vh", background:"#030712", display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 16px"}}>
+          <div style={{width:"100%", maxWidth:"520px"}}>
+            {!submitted ? (
+              <div>
+                <div style={{marginBottom:"28px"}}>
+                  <p style={{fontSize:"11px", color:"#818cf8", fontFamily:"monospace", marginBottom:"6px", letterSpacing:"0.05em"}}>ENVC — Etkinlik Kaydı</p>
+                  <div style={{background:"#0f172a", border:"1px solid #1e293b", borderRadius:"10px", padding:"16px", marginBottom:"20px"}}>
+                    <div style={{display:"flex", alignItems:"center", gap:"10px", marginBottom:"10px"}}>
+                      <span style={{fontSize:"24px"}}>🤝</span>
+                      <div>
+                        <h2 style={{color:"white", fontSize:"16px", fontWeight:"700", margin:0}}>ENVC Genel Tanışma Buluşması</h2>
+                        <p style={{color:"#94a3b8", fontSize:"12px", margin:0}}>Herkese açık</p>
+                      </div>
+                    </div>
+                    <div style={{display:"flex", gap:"16px", flexWrap:"wrap"}}>
+                      <span style={{color:"#a5b4fc", fontSize:"12px"}}>📅 15 Mart 2026, Pazar</span>
+                      <span style={{color:"#a5b4fc", fontSize:"12px"}}>🕔 15:00</span>
+                    </div>
+                    <p style={{color:"#64748b", fontSize:"12px", marginTop:"10px", lineHeight:"1.6"}}>
+                      Girişimcilik ve yatırım dünyasına ilgi duyan Boğaziçi öğrencilerini bir araya getiriyoruz. Tanış, konuş, ekosistemi keşfet.
+                    </p>
+                  </div>
+                  <h1 style={{fontSize:"20px", fontWeight:"700", color:"white"}}>Kayıt Formu</h1>
+                </div>
+
+                <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
+                  {fields.map(f => (
+                    <div key={f.k}>
+                      <label style={labelStyle}>{f.label} {reqStar}</label>
+                      <input value={a[f.k]||""} onChange={e=>set(f.k,e.target.value)} placeholder={f.placeholder} style={{...inputStyle,...err(f.k)}} />
+                      {errors[f.k] && <p style={{color:"#f87171",fontSize:"12px",marginTop:"4px"}}>Bu alan zorunludur.</p>}
+                    </div>
+                  ))}
+                  <div>
+                    <label style={labelStyle}>Eklemek istediğin bir şey? (opsiyonel)</label>
+                    <textarea value={a.note||""} onChange={e=>set("note",e.target.value)}
+                      placeholder="Serbest alan..." rows={2} style={{...inputStyle, resize:"none"}} />
+                  </div>
+                </div>
+
+                <button onClick={submit} disabled={loading} style={{
+                  width:"100%", marginTop:"24px", background:loading?"#3730a3":"#4f46e5",
+                  border:"none", color:"white", padding:"12px", borderRadius:"8px",
+                  fontSize:"14px", fontWeight:"500", cursor:"pointer"
+                }}>
+                  {loading ? "Kaydediliyor..." : "Kaydımı Tamamla"}
+                </button>
+              </div>
+            ) : (
+              <div style={{textAlign:"center", padding:"60px 0"}}>
+                <div style={{fontSize:"40px", marginBottom:"16px"}}>🎉</div>
+                <h2 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"8px"}}>Kaydın alındı!</h2>
+                <p style={{color:"#64748b", fontSize:"14px"}}>15 Mart'ta görüşürüz.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
