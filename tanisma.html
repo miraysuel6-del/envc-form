@@ -1,108 +1,133 @@
-import { useState } from "react";
-
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHGEJ0SCxG862t67JEpAyBFQkaSRm4WDDoo-BqV66sfzRtBEI6xPPhhGEVh0jCMTJM5w/exec";
-
-const inputStyle = {
-  width:"100%", background:"#0f172a", border:"1px solid #1e293b",
-  borderRadius:"8px", padding:"10px 12px", fontSize:"14px", color:"white", outline:"none"
-};
-const labelStyle = { fontSize:"14px", color:"#cbd5e1", display:"block", marginBottom:"6px" };
-const reqStar = <span style={{color:"#f87171"}}>*</span>;
-
-export default function App() {
-  const [a, setA] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const set = (k, v) => { setA(p => ({...p, [k]: v})); setErrors(e => ({...e, [k]: false})); };
-
-  const validate = () => {
-    const e = {};
-    if (!a.name?.trim()) e.name = true;
-    if (!a.dept?.trim()) e.dept = true;
-    if (!a.email?.trim()) e.email = true;
-    if (!a.phone?.trim()) e.phone = true;
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const submit = async () => {
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      const params = new URLSearchParams(Object.fromEntries(Object.entries(a).map(([k,v]) => [k, v||""])));
-      await fetch(APPS_SCRIPT_URL + "?" + params.toString(), { method:"GET", mode:"no-cors" });
-    } catch(e) {}
-    setLoading(false);
-    setSubmitted(true);
-  };
-
-  const err = (k) => errors[k] ? {border:"1px solid #f87171"} : {};
-
-  return (
-    <div style={{minHeight:"100vh", background:"#030712", display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 16px"}}>
-      <div style={{width:"100%", maxWidth:"520px"}}>
-        {!submitted ? (
-          <>
-            <div style={{marginBottom:"28px"}}>
-              <p style={{fontSize:"11px", color:"#818cf8", fontFamily:"monospace", marginBottom:"6px", letterSpacing:"0.05em"}}>ENVC — Etkinlik Kaydı</p>
-              <div style={{background:"#0f172a", border:"1px solid #1e293b", borderRadius:"10px", padding:"16px", marginBottom:"20px"}}>
-                <div style={{display:"flex", alignItems:"center", gap:"10px", marginBottom:"10px"}}>
-                  <span style={{fontSize:"24px"}}>🤝</span>
-                  <div>
-                    <h2 style={{color:"white", fontSize:"16px", fontWeight:"700", margin:0}}>ENVC Genel Tanışma Buluşması</h2>
-                    <p style={{color:"#94a3b8", fontSize:"12px", margin:0}}>Herkese açık</p>
-                  </div>
-                </div>
-                <div style={{display:"flex", gap:"16px", flexWrap:"wrap"}}>
-                  <span style={{color:"#a5b4fc", fontSize:"12px"}}>📅 15 Mart 2026, Pazar</span>
-                  <span style={{color:"#a5b4fc", fontSize:"12px"}}>🕔 15:00</span>
-                </div>
-                <p style={{color:"#64748b", fontSize:"12px", marginTop:"10px", lineHeight:"1.6"}}>
-                  Girişimcilik ve VC dünyasına ilgi duyan Boğaziçi öğrencilerini bir araya getiriyoruz. Tanış, konuş, ekosistemi keşfet.
-                </p>
-              </div>
-              <h1 style={{fontSize:"20px", fontWeight:"700", color:"white"}}>Kayıt Formu</h1>
-            </div>
-
-            <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
-              {[
-                {k:"name", label:"İsim Soyisim", placeholder:"Miray İpek", req:true},
-                {k:"dept", label:"Bölüm & Sınıf", placeholder:"Felsefe & Ekonomi, 3. sınıf", req:true},
-                {k:"email", label:"E-posta", placeholder:"miray@example.com", req:true},
-                {k:"phone", label:"Telefon", placeholder:"+90 5xx xxx xx xx", req:true},
-              ].map(f => (
-                <div key={f.k}>
-                  <label style={labelStyle}>{f.label} {f.req && reqStar}</label>
-                  <input value={a[f.k]||""} onChange={e=>set(f.k,e.target.value)} placeholder={f.placeholder} style={{...inputStyle,...err(f.k)}} />
-                  {errors[f.k] && <p style={{color:"#f87171",fontSize:"12px",marginTop:"4px"}}>Bu alan zorunludur.</p>}
-                </div>
-              ))}
-
-              <div>
-                <label style={labelStyle}>Eklemek istediğin bir şey? (opsiyonel)</label>
-                <textarea value={a.note||""} onChange={e=>set("note",e.target.value)}
-                  placeholder="Serbest alan..." rows={2} style={{...inputStyle, resize:"none"}} />
-              </div>
-            </div>
-
-            <button onClick={submit} disabled={loading} style={{
-              width:"100%", marginTop:"24px", background:loading?"#3730a3":"#4f46e5",
-              border:"none", color:"white", padding:"12px", borderRadius:"8px",
-              fontSize:"14px", fontWeight:"500", cursor:"pointer"
-            }}>
-              {loading ? "Kaydediliyor..." : "Kaydımı Tamamla"}
-            </button>
-          </>
-        ) : (
-          <div style={{textAlign:"center", padding:"60px 0"}}>
-            <div style={{fontSize:"40px", marginBottom:"16px"}}>🎉</div>
-            <h2 style={{fontSize:"20px", fontWeight:"700", color:"white", marginBottom:"8px"}}>Kaydın alındı!</h2>
-            <p style={{color:"#64748b", fontSize:"14px"}}>15 Mart'ta görüşürüz.</p>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENVC Tanışma Kaydı</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; background: #030712; display: flex; align-items: center; justify-content: center; padding: 24px 16px; font-family: system-ui, sans-serif; }
+    .wrap { width: 100%; max-width: 520px; }
+    .tag { font-size: 11px; color: #818cf8; font-family: monospace; margin-bottom: 6px; letter-spacing: 0.05em; }
+    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .card-head h2 { color: white; font-size: 16px; font-weight: 700; }
+    .card-head p { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .meta span { color: #a5b4fc; font-size: 12px; }
+    .desc { color: #64748b; font-size: 12px; margin-top: 10px; line-height: 1.6; }
+    h1 { font-size: 20px; font-weight: 700; color: white; margin-bottom: 20px; }
+    label { font-size: 14px; color: #cbd5e1; display: block; margin-bottom: 6px; }
+    .req { color: #f87171; }
+    input, textarea { width: 100%; background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: white; outline: none; font-family: inherit; }
+    input::placeholder, textarea::placeholder { color: #475569; }
+    textarea { resize: none; }
+    .field { margin-bottom: 16px; }
+    .err-msg { color: #f87171; font-size: 12px; margin-top: 4px; display: none; }
+    .field.error input, .field.error textarea { border-color: #f87171; }
+    .field.error .err-msg { display: block; }
+    button { width: 100%; margin-top: 24px; background: #4f46e5; border: none; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    button:disabled { background: #3730a3; cursor: not-allowed; }
+    .success { text-align: center; padding: 60px 0; display: none; }
+    .success .emoji { font-size: 40px; margin-bottom: 16px; }
+    .success h2 { font-size: 20px; font-weight: 700; color: white; margin-bottom: 8px; }
+    .success p { color: #64748b; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="formSection">
+      <p class="tag">ENVC — Etkinlik Kaydı</p>
+      <div class="card">
+        <div class="card-head">
+          <span style="font-size:24px">🤝</span>
+          <div>
+            <h2>ENVC Genel Tanışma Buluşması</h2>
+            <p>Herkese açık</p>
           </div>
-        )}
+        </div>
+        <div class="meta">
+          <span>📅 15 Mart 2026, Pazar</span>
+          <span>🕔 15:00</span>
+        </div>
+        <p class="desc">Girişimcilik ve VC dünyasına ilgi duyan Boğaziçi öğrencilerini bir araya getiriyoruz. Tanış, konuş, ekosistemi keşfet.</p>
       </div>
+      <h1>Kayıt Formu</h1>
+
+      <div class="field" id="f-name">
+        <label>İsim Soyisim <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="Miray İpek" />
+        <p class="err-msg">Bu alan zorunludur.</p>
+      </div>
+      <div class="field" id="f-dept">
+        <label>Bölüm & Sınıf <span class="req">*</span></label>
+        <input type="text" id="dept" placeholder="Felsefe & Ekonomi, 3. sınıf" />
+        <p class="err-msg">Bu alan zorunludur.</p>
+      </div>
+      <div class="field" id="f-email">
+        <label>E-posta <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="miray@example.com" />
+        <p class="err-msg">Bu alan zorunludur.</p>
+      </div>
+      <div class="field" id="f-phone">
+        <label>Telefon <span class="req">*</span></label>
+        <input type="text" id="phone" placeholder="+90 5xx xxx xx xx" />
+        <p class="err-msg">Bu alan zorunludur.</p>
+      </div>
+      <div class="field">
+        <label>Eklemek istediğin bir şey? (opsiyonel)</label>
+        <textarea id="note" rows="2" placeholder="Serbest alan..."></textarea>
+      </div>
+
+      <button id="submitBtn" onclick="submitForm()">Kaydımı Tamamla</button>
     </div>
-  );
-}
+
+    <div class="success" id="successSection">
+      <div class="emoji">🎉</div>
+      <h2>Kaydın alındı!</h2>
+      <p>15 Mart'ta görüşürüz.</p>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHGEJ0SCxG862t67JEpAyBFQkaSRm4WDDoo-BqV66sfzRtBEI6xPPhhGEVh0jCMTJM5w/exec";
+
+    function submitForm() {
+      const fields = ["name", "dept", "email", "phone"];
+      let valid = true;
+
+      fields.forEach(f => {
+        const el = document.getElementById(f);
+        const wrap = document.getElementById("f-" + f);
+        if (!el.value.trim()) {
+          wrap.classList.add("error");
+          valid = false;
+        } else {
+          wrap.classList.remove("error");
+        }
+        el.addEventListener("input", () => wrap.classList.remove("error"));
+      });
+
+      if (!valid) return;
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "Kaydediliyor...";
+
+      const params = new URLSearchParams({
+        name: document.getElementById("name").value,
+        dept: document.getElementById("dept").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        note: document.getElementById("note").value,
+      });
+
+      fetch(APPS_SCRIPT_URL + "?" + params.toString(), { method: "GET", mode: "no-cors" })
+        .finally(() => {
+          document.getElementById("formSection").style.display = "none";
+          document.getElementById("successSection").style.display = "block";
+        });
+    }
+  </script>
+</body>
+</html>
